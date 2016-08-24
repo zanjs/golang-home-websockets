@@ -1,3 +1,5 @@
+// license that can be found in the LICENSE file.
+
 package main
 
 import (
@@ -24,9 +26,9 @@ func ChatroomServer(ws *websocket.Conn) {
 	item := conns.PushBack(ws)
 	defer conns.Remove(item)
 
-	name := fmt.Sprintf("user%d", id)
+	name := fmt.Sprintf("用户%d", id)
 
-	SendMessage(nil, fmt.Sprintf("welcome %s join\n", name))
+	SendMessage(nil, fmt.Sprintf("欢迎 %s 加入\n", name))
 
 	r := bufio.NewReader(ws)
 
@@ -60,7 +62,6 @@ func SendMessage(self *list.Element, data string) {
 	}
 }
 
-// 网页客户端
 func Client(w http.ResponseWriter, r *http.Request) {
 	html := `<!doctype html>
 <html>
@@ -113,10 +114,10 @@ func Client(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	fmt.Printf(`Welcome chatroom server!
-author: dotcoo zhao
-url: http://www.dotcoo.com/golang-websocket-chatroom
 
+	fmt.Printf(`Welcome chatroom server!
+author: Julian
+url: 127.0.0.1:6611
 `)
 
 	connid = 0

@@ -30,9 +30,10 @@ func Command(ws *websocket.Conn) {
 }
 
 func main() {
+
 	fmt.Printf(`Welcome chatroom!
-    author: dotcoo zhao
-    url: http://zanjs/golang-websocket-chatroom            
+    author: Julian
+    url: http://127.0.0.1:6611            
     `)
 
 	origin := "http://127.0.0.1:6611/"
