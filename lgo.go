@@ -1,5 +1,3 @@
-// license that can be found in the LICENSE file.
-
 package main
 
 import (
@@ -15,12 +13,16 @@ import (
 var connid int
 var conns *list.List
 
+func Client(w http.ResponseWriter, r *http.Request) {
+	html := HTML
+	io.WriteString(w, html)
+}
+
 func ChatroomServer(ws *websocket.Conn) {
 	defer ws.Close()
 
 	connid++
 	id := connid
-
 	fmt.Printf("connection id: %d\n", id)
 
 	item := conns.PushBack(ws)
@@ -28,7 +30,7 @@ func ChatroomServer(ws *websocket.Conn) {
 
 	name := fmt.Sprintf("用户%d", id)
 
-	SendMessage(nil, fmt.Sprintf("欢迎 %s 加入\n", name))
+	SendMessage(nil, fmt.Sprintf(" %s 加入\n", name))
 
 	r := bufio.NewReader(ws)
 
@@ -62,15 +64,49 @@ func SendMessage(self *list.Element, data string) {
 	}
 }
 
-func Client(w http.ResponseWriter, r *http.Request) {
-	html := `<!doctype html>
+func main() {
+
+	fmt.Printf(STARTMSG)
+
+	connid = 0
+	conns = list.New()
+	http.HandleFunc("/", Client)
+	http.Handle("/chatroom", websocket.Handler(ChatroomServer))
+
+	err := http.ListenAndServe(":6611", nil)
+	if err != nil {
+		panic("ListenAndServe: " + err.Error())
+	}
+}
+
+const STARTMSG = `Welcome chatroom server!
+author: Julian
+open: 127.0.0.1:6611`
+
+const HTML = `<!doctype html>
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>golang websocket chatroom</title>
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
-    <script>
-        var ws = new WebSocket("ws://127.0.0.1:6611/chatroom");
+</head>
+<body>
+    <div id="log" style="height: 400px;overflow-y: scroll;border: 1px solid #CCC;">
+    </div>
+    <div>
+        <form id="form">
+            <input type="text" id="msg" size="60" />
+        </form>
+    </div>
+</body>
+<script>
+window.onload = function () {
+	    var hostname = window.location.hostname;
+		var wsh = 'ws://'+hostname+':6611/chatroom';
+        var ws = new WebSocket(wsh);
+
+		var msg = document.getElementById("msg");
+   		var log = document.getElementById("log");
+
         ws.onopen = function(e){
             console.log("onopen");
             console.dir(e);
@@ -78,8 +114,10 @@ func Client(w http.ResponseWriter, r *http.Request) {
         ws.onmessage = function(e){
             console.log("onmessage");
             console.dir(e);
-            $('#log').append('<p>'+e.data+'<p>');
-            $('#log').get(0).scrollTop = $('#log').get(0).scrollHeight;
+			var item = document.createElement("div");
+			item.innerHTML = '<p>'+e.data+'<p>';
+            log.appendChild(item);
+            log.scrollTop = log.clientHeight;
         };
         ws.onclose = function(e){
             console.log("onclose");
@@ -89,44 +127,20 @@ func Client(w http.ResponseWriter, r *http.Request) {
             console.log("onerror");
             console.dir(e);
         };
-        $(function(){
-            $('#msgform').submit(function(){
-                ws.send($('#msg').val()+"\n");
-                $('#log').append('<p style="color:red;">My > '+$('#msg').val()+'<p>');
-                $('#log').get(0).scrollTop = $('#log').get(0).scrollHeight;
-                $('#msg').val('');
-                return false;
-            });
-        });
-    </script>
-</head>
-<body>
-    <div id="log" style="height: 300px;overflow-y: scroll;border: 1px solid #CCC;">
-    </div>
-    <div>
-        <form id="msgform">
-            <input type="text" id="msg" size="60" />
-        </form>
-    </div>
-</body>
+        
+		document.getElementById("form").onsubmit = function(){
+			if(!msg.value){
+				return false;
+			}
+
+			ws.send(msg.value + "\n");
+			var item = document.createElement("div")
+			item.innerHTML = '<p style="color:red;">我:'+ msg.value +'<p>';
+			log.appendChild(item);
+			log.scrollTop = log.clientHeight;
+			msg.value = "";
+			return false;
+		};
+};
+</script>
 </html>`
-	io.WriteString(w, html)
-}
-
-func main() {
-
-	fmt.Printf(`Welcome chatroom server!
-author: Julian
-url: 127.0.0.1:6611
-`)
-
-	connid = 0
-	conns = list.New()
-
-	http.Handle("/chatroom", websocket.Handler(ChatroomServer))
-	http.HandleFunc("/", Client)
-	err := http.ListenAndServe(":6611", nil)
-	if err != nil {
-		panic("ListenAndServe: " + err.Error())
-	}
-}

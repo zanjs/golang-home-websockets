@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>golang websocket chatroom</title>
+</head>
+<body>
+    <div id="log" style="height: 400px;overflow-y: scroll;border: 1px solid #CCC;">
+    </div>
+    <div>
+        <form id="form">
+            <input type="text" id="msg" size="60" />
+        </form>
+    </div>
+</body>
+<script>
+window.onload = function () {
+        var ws = new WebSocket("ws://127.0.0.1:6611/chatroom");
+
+		var msg = document.getElementById("msg");
+   		var log = document.getElementById("log");
+
+        ws.onopen = function(e){
+            console.log("onopen");
+            console.dir(e);
+        };
+        ws.onmessage = function(e){
+            console.log("onmessage");
+            console.dir(e);
+			var item = document.createElement("div");
+			item.innerHTML = '<p>'+e.data+'<p>';
+            log.appendChild(item);
+            log.scrollTop = log.clientHeight;
+        };
+        ws.onclose = function(e){
+            console.log("onclose");
+            console.dir(e);
+        };
+        ws.onerror = function(e){
+            console.log("onerror");
+            console.dir(e);
+        };
+        
+		document.getElementById("form").onsubmit = function(){
+			ws.send(msg.value + "\n");
+			var item = document.createElement("div")
+			item.innerHTML = '<p style="color:red;">我:'+ msg.value +'<p>';
+			log.appendChild(item);
+			log.scrollTop = log.clientHeight;
+			msg.value = "";
+			return false;
+		};
+};
+</script>
+</html>
