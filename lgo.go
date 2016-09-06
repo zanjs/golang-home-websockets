@@ -101,7 +101,11 @@ const HTML = `<!doctype html>
 <script>
 window.onload = function () {
 	    var hostname = window.location.hostname;
-		var wsh = 'ws://'+hostname+':6611/chatroom';
+	    var hostport = window.location.port;
+		if(hostport != ""){
+			hostport = ':'+hostport;
+		}
+		var wsh = 'ws://'+hostname+hostport+'/chatroom';
         var ws = new WebSocket(wsh);
 
 		var msg = document.getElementById("msg");
